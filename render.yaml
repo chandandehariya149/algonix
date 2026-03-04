@@ -1,0 +1,4 @@
+redirects:
+  - source: /*
+    destination: https://algonix.online/:splat
+    type: permanent
