@@ -1,3 +1,10 @@
+services:
+  - type: web
+    name: algonix
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: build
+
 redirects:
   - source: /*
     destination: https://algonix.online/:splat
