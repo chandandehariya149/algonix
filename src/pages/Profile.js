@@ -118,7 +118,7 @@ function Profile() {
           <form onSubmit={handlePhotoUpload} className="photo-form">
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg, .jpeg, .png"
               onChange={(e) => setPhoto(e.target.files[0])}
             />
             <button type="submit">Upload Photo</button>
