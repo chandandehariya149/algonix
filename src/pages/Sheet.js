@@ -1,231 +1,202 @@
-import { useState, useEffect, useContext } from 'react';
+﻿import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../styles/Sheet.css';
-import { Link } from 'react-router-dom';
+
+const API = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 function Sheet() {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [sheets, setSheets] = useState([]);
   const [progress, setProgress] = useState([]);
   const [form, setForm] = useState({ question: '', solution: '', websiteLink: '', code: '' });
   const [editingId, setEditingId] = useState(null);
-  const [visibleCode, setVisibleCode] = useState({});
-  const [selectedCode, setSelectedCode] = useState(null); // For modal
+  const [selectedCode, setSelectedCode] = useState(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet`)
-      .then(res => setSheets(res.data));
+    axios.get(`${API}/api/sheet`).then(res => setSheets(res.data));
     if (user) {
-      axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet/progress`, {
+      axios.get(`${API}/api/sheet/progress`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
-        .then(res => setProgress(res.data));
+      }).then(res => setProgress(res.data));
     }
   }, [user]);
+
+  const reload = async () => {
+    const res = await axios.get(`${API}/api/sheet`);
+    setSheets(res.data);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet/${editingId}`,
-          form,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        await axios.put(`${API}/api/sheet/${editingId}`, form,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
         setEditingId(null);
       } else {
-        await axios.post(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet`,
-          form,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        await axios.post(`${API}/api/sheet`, form,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       }
       setForm({ question: '', solution: '', websiteLink: '', code: '' });
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet`);
-      setSheets(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+      reload();
+    } catch (err) { console.error(err); }
   };
 
-  const handleEdit = (sheet) => {
-    setForm(sheet);
-    setEditingId(sheet._id);
-  };
-
+  const handleEdit = (sheet) => { setForm(sheet); setEditingId(sheet._id); };
   const handleDelete = async (sheetId) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      try {
-        await axios.delete(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet/${sheetId}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet`);
-        setSheets(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    }
+    if (!window.confirm('Delete this question?')) return;
+    try {
+      await axios.delete(`${API}/api/sheet/${sheetId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      reload();
+    } catch (err) { console.error(err); }
   };
-
-  const toggleCode = (id, code) => {
+  const toggleCode = (id, code) =>
     setSelectedCode(selectedCode && selectedCode.id === id ? null : { id, code });
-  };
 
   const toggleSolved = async (sheetId, solved) => {
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/sheet/progress`,
-        { sheetId, solved },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const res = await axios.post(`${API}/api/sheet/progress`, { sheetId, solved },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setProgress((prev) => {
         const updated = prev.filter((p) => p.sheetId.toString() !== sheetId);
         return [...updated, res.data];
       });
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const isAdmin = user?.email === 'chandandehariya149@gmail.com';
+  const filtered = sheets.filter(s =>
+    !search || s.question.toLowerCase().includes(search.toLowerCase()));
+  const solvedCount = progress.filter(p => p.solved).length;
+  const pct = sheets.length ? Math.round((solvedCount / sheets.length) * 100) : 0;
 
   return (
-    <div className="sheet-container">
-      <nav className="sheet-nav">
-        <div className="nav-content">
-          <a href="/" className="logo">ALGONIX</a>
-          <div className="nav-links">
-            <a href="/">Home</a>
-            <Link to="/sheet">Sheet</Link>
-            <Link to="/author">Author</Link>
-           
-            {user ? (
-              <div className="profile-dropdown">
-               <img
-      src={
-        user.profilePhoto &&
-        user.profilePhoto !== '/assets/default-profile.png' &&
-        user.profilePhoto !== ''
-          ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/profile/photo/${user._id}`
-          : '/assets/default-profile.png'
-      }
-      alt="Profile"
-      className="profile-photo"
-    />
-                <div className="dropdown-content">
-                  <a href="/profile">My Profile</a>
-                  <button onClick={logout}>Logout</button>
-                </div>
+    <div className="page">
+      <Navbar />
+      <main className="sheet container">
+        <header className="sheet__head">
+          <div>
+            <span className="eyebrow">DSA practice</span>
+            <h1 className="gradient-text">Algonix Coding Sheet</h1>
+            <p>149 hand-picked problems with video solutions and code. Track your progress.</p>
+          </div>
+          {user && (
+            <div className="sheet__progress">
+              <div className="sheet__progress-track">
+                <div className="sheet__progress-fill" style={{ width: `${pct}%` }} />
               </div>
-            ) : (
-              <a href="/login">Login</a>
-            )}
+              <span><strong>{solvedCount}</strong> / {sheets.length} solved · {pct}%</span>
+            </div>
+          )}
+        </header>
+
+        <div className="sheet__toolbar">
+          <input
+            className="sheet__search"
+            placeholder="Search a problem..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {isAdmin && (
+          <div className="sheet__form">
+            <h3>{editingId ? 'Edit' : 'Add'} Question</h3>
+            <form onSubmit={handleSubmit}>
+              <input type="text" placeholder="Question" value={form.question}
+                onChange={(e) => setForm({ ...form, question: e.target.value })} />
+              <input type="text" placeholder="Solution (YouTube Link)" value={form.solution}
+                onChange={(e) => setForm({ ...form, solution: e.target.value })} />
+              <input type="text" placeholder="Website Link" value={form.websiteLink}
+                onChange={(e) => setForm({ ...form, websiteLink: e.target.value })} />
+              <textarea placeholder="Code" value={form.code}
+                onChange={(e) => setForm({ ...form, code: e.target.value })}></textarea>
+              <button type="submit" className="btn btn-primary">{editingId ? 'Update' : 'Add'}</button>
+            </form>
           </div>
-        </div>
-      </nav>
-      <h2>Chandan's 149 Sheet</h2>
-      {isAdmin && (
-        <div className="sheet-form">
-          <h3>{editingId ? 'Edit' : 'Add'} Question</h3>
-          <form>
-            <input
-              type="text"
-              placeholder="Question"
-              value={form.question}
-              onChange={(e) => setForm({ ...form, question: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="Solution (YouTube Link)"
-              value={form.solution}
-              onChange={(e) => setForm({ ...form, solution: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="Website Link"
-              value={form.websiteLink}
-              onChange={(e) => setForm({ ...form, websiteLink: e.target.value })}
-            />
-            <textarea
-              placeholder="Code"
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })}
-            ></textarea>
-            <button type="button" onClick={handleSubmit}>
-              {editingId ? 'Update' : 'Add'}
-            </button>
-          </form>
-        </div>
-      )}
-      <table className="sheet-table">
-        <thead>
-          <tr>
-            <th>Question</th>
-            <th>Solution</th>
-            <th>Website</th>
-            <th>Code</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sheets.map((sheet) => {
-            const progressEntry = progress.find((p) => p.sheetId.toString() === sheet._id.toString());
-            const isSolved = progressEntry?.solved || false;
-            return (
-              <tr key={sheet._id}>
-                <td>{sheet.question}</td>
-                <td>
-                  {sheet.solution && (
-                    <a href={sheet.solution} target="_blank" rel="noopener noreferrer">
-                      <img src="/assets/yt.png" alt="YouTube" className="yt-icon" />
-                    </a>
-                  )}
-                </td>
-                <td>
-                  {sheet.websiteLink && (
-                    <a href={sheet.websiteLink} target="_blank" rel="noopener noreferrer">
-                      <img src="/assets/website.png" alt="Website" className="website-icon" />
-                    </a>
-                  )}
-                </td>
-                <td>
-                  {sheet.code && (
-                    <button onClick={() => toggleCode(sheet._id, sheet.code)} className="see-code-btn">
-                      {selectedCode?.id === sheet._id ? 'Hide Code' : 'See Code'}
-                    </button>
-                  )}
-                </td>
-                <td>
-                  {isAdmin ? (
-                    <div className="admin-actions">
-                      <button onClick={() => handleEdit(sheet)}>Edit</button>
-                      <button onClick={() => handleDelete(sheet._id)} className="delete-btn">Delete</button>
-                    </div>
-                  ) : (
-                    <button
-                      className={`status-btn ${isSolved ? 'solved' : 'not-solved'}`}
-                      onClick={() => toggleSolved(sheet._id, !isSolved)}
-                    >
-                      {isSolved ? 'Solved' : 'Not Solved'}
-                    </button>
-                  )}
-                </td>
+        )}
+
+        <div className="sheet__table-wrap">
+          <table className="sheet__table">
+            <thead>
+              <tr>
+                <th style={{ width: '50px' }}>#</th>
+                <th>Question</th>
+                <th>Solution</th>
+                <th>Website</th>
+                <th>Code</th>
+                <th>Status</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {selectedCode && (
-        <div className="code-modal">
-          <div className="code-modal-content">
-            <button className="code-modal-close" onClick={() => setSelectedCode(null)}>✖</button>
-            <h3>Code</h3>
-            <pre>{selectedCode.code}</pre>
-          </div>
+            </thead>
+            <tbody>
+              {filtered.map((sheet, idx) => {
+                const entry = progress.find((p) => p.sheetId.toString() === sheet._id.toString());
+                const isSolved = entry?.solved || false;
+                return (
+                  <tr key={sheet._id} className={isSolved ? 'is-solved' : ''}>
+                    <td className="sheet__idx">{idx + 1}</td>
+                    <td className="sheet__q">{sheet.question}</td>
+                    <td>
+                      {sheet.solution && (
+                        <a href={sheet.solution} target="_blank" rel="noopener noreferrer" className="sheet__icon-link" title="Watch solution">
+                          <img src="/assets/yt.png" alt="YouTube" />
+                        </a>
+                      )}
+                    </td>
+                    <td>
+                      {sheet.websiteLink && (
+                        <a href={sheet.websiteLink} target="_blank" rel="noopener noreferrer" className="sheet__icon-link" title="Open problem">
+                          <img src="/assets/website.png" alt="Website" />
+                        </a>
+                      )}
+                    </td>
+                    <td>
+                      {sheet.code && (
+                        <button onClick={() => toggleCode(sheet._id, sheet.code)} className="sheet__chip">
+                          {selectedCode?.id === sheet._id ? 'Hide' : 'See code'}
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      {isAdmin ? (
+                        <div className="sheet__admin">
+                          <button onClick={() => handleEdit(sheet)} className="sheet__chip">Edit</button>
+                          <button onClick={() => handleDelete(sheet._id)} className="sheet__chip sheet__chip--danger">Delete</button>
+                        </div>
+                      ) : (
+                        <button
+                          className={`sheet__status ${isSolved ? 'is-solved' : ''}`}
+                          onClick={() => user && toggleSolved(sheet._id, !isSolved)}
+                          disabled={!user}
+                          title={user ? '' : 'Sign in to track progress'}
+                        >
+                          {isSolved ? '✓ Solved' : 'Mark solved'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {selectedCode && (
+          <div className="sheet__modal" onClick={() => setSelectedCode(null)}>
+            <div className="sheet__modal-card" onClick={(e) => e.stopPropagation()}>
+              <button className="sheet__modal-close" onClick={() => setSelectedCode(null)}>✕</button>
+              <h3>Solution code</h3>
+              <pre><code>{selectedCode.code}</code></pre>
+            </div>
+          </div>
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

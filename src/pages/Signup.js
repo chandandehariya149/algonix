@@ -1,75 +1,75 @@
-import { useState, useContext } from 'react';
+﻿import { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../styles/Auth.css';
 
 function Signup() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name,     setName]     = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [error, setError] = useState('');
+  const [error,    setError]    = useState('');
+  const [busy,     setBusy]     = useState(false);
   const { signup } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await signup(name, email, password, whatsapp);
-    } catch (err) {
-      setError(err.message);
-    }
+    setBusy(true); setError('');
+    try { await signup(name, email, password, whatsapp); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   };
 
   return (
-    <div className="auth-container">
-      <nav className="auth-nav">
-        <div className="nav-content">
-          <a href="/" className="logo">ALGONIX</a>
-          <div className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/sheet">Sheet</Link>
-            <Link to="/login">Login</Link>
-          </div>
+    <div className="page">
+      <Navbar />
+      <main className="auth">
+        <div className="auth__bg" aria-hidden="true">
+          <div className="auth__glow auth__glow--1" />
+          <div className="auth__glow auth__glow--2" />
         </div>
-      </nav>
-      <div className="auth-box">
-        <h2>Signup</h2>
-        {error && <p className="error">{error}</p>}
-        <form>
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <label htmlFor="whatsapp">WhatsApp Number</label>
-          <input
-            type="text"
-            id="whatsapp"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-          />
-          <button type="button" onClick={handleSubmit}>Signup</button>
-        </form>
-        <p>
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
+        <div className="auth__card">
+          <span className="eyebrow">Get started</span>
+          <h1 className="gradient-text">Create your account</h1>
+          <p>Free forever. No credit card. No clutter.</p>
+          {error && <div className="auth__error">{error}</div>}
+          <form className="auth__form" onSubmit={handleSubmit}>
+            <div className="field">
+              <label htmlFor="name">Name</label>
+              <input id="name" type="text" required value={name}
+                placeholder="Your full name"
+                onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" required autoComplete="email" value={email}
+                placeholder="you@example.com"
+                onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="password">Password</label>
+              <input id="password" type="password" required autoComplete="new-password" value={password}
+                placeholder="At least 8 characters"
+                onChange={(e) => setPassword(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="whatsapp">WhatsApp number</label>
+              <input id="whatsapp" type="text" value={whatsapp}
+                placeholder="+91 ..."
+                onChange={(e) => setWhatsapp(e.target.value)} />
+            </div>
+            <button type="submit" className="btn btn-primary auth__submit" disabled={busy}>
+              {busy ? 'Creating...' : 'Create account'}
+            </button>
+          </form>
+          <p className="auth__alt">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

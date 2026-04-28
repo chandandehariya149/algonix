@@ -1,20 +1,23 @@
-import { useState, useEffect, useContext } from 'react'; // Added useContext
-import { Link, useNavigate } from 'react-router-dom'; // Added Link
-import { AuthContext } from '../context/AuthContext'; // Added AuthContext
+﻿import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import Reveal from '../components/Reveal';
 import '../styles/Tutorials.css';
 
+const API = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 function Tutorials() {
   const [tutorials, setTutorials] = useState([]);
   const [newTutorial, setNewTutorial] = useState({ iframeLink: '', directLink: '', topic: '' });
   const [error, setError] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext); // Added user and logout from AuthContext
+  useContext(AuthContext);
 
-  useEffect(() => {
-    fetchTutorials();
-  }, []);
+  useEffect(() => { fetchTutorials(); }, []);
 
   const fetchTutorials = async () => {
     try {
@@ -25,147 +28,113 @@ function Tutorials() {
     }
   };
 
-  
-  console.log("API URL is:", `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/tutorials`);
-
-
   const handleAddTutorial = async (e) => {
     e.preventDefault();
     if (!newTutorial.iframeLink || !newTutorial.directLink || !newTutorial.topic) {
-      setError('All fields are required');
-      return;
+      setError('All fields are required'); return;
     }
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/tutorials`, newTutorial, {
+      await axios.post(`${API}/api/tutorials`, newTutorial, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setNewTutorial({ iframeLink: '', directLink: '', topic: '' });
       fetchTutorials();
       setError('');
-    } catch (err) {
-      setError('Failed to add tutorial');
-    }
+    } catch (err) { setError('Failed to add tutorial'); }
   };
 
   const handleRemoveTutorial = async (id) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/tutorials/${id}`, {
+      await axios.delete(`${API}/api/tutorials/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchTutorials();
-    } catch (err) {
-      setError('Failed to remove tutorial');
-    }
+    } catch (err) { setError('Failed to remove tutorial'); }
   };
 
   const handleChangeTutorial = async (id) => {
-    const updatedTutorial = { ...tutorials.find(t => t._id === id), iframeLink: prompt('Enter new iframe link:'), directLink: prompt('Enter new direct link:'), topic: prompt('Enter new topic:') };
+    const current = tutorials.find(t => t._id === id);
+    const updated = {
+      ...current,
+      iframeLink: prompt('Enter new iframe link:', current?.iframeLink) || current?.iframeLink,
+      directLink: prompt('Enter new direct link:', current?.directLink) || current?.directLink,
+      topic:      prompt('Enter new topic:',       current?.topic)      || current?.topic,
+    };
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/tutorials/${id}`, updatedTutorial, {
+      await axios.put(`${API}/api/tutorials/${id}`, updated, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchTutorials();
-    } catch (err) {
-      setError('Failed to update tutorial');
-    }
+    } catch (err) { setError('Failed to update tutorial'); }
   };
 
-  const isAdmin = localStorage.getItem('token') && JSON.parse(atob(localStorage.getItem('token').split('.')[1])).email === 'chandandehariya149@gmail.com';
-
-  const toggleDropdown = (e) => {
-    const dropdown = e.currentTarget.querySelector('.dropdown-content');
-    dropdown.classList.toggle('show');
-  };
+  const isAdmin = (() => {
+    const t = localStorage.getItem('token');
+    if (!t) return false;
+    try { return JSON.parse(atob(t.split('.')[1])).email === 'chandandehariya149@gmail.com'; }
+    catch { return false; }
+  })();
 
   return (
-    <div className="tutorials-container">
-      <nav className="tutorials-nav">
-        <div className="nav-content">
-          <a href="/" className="logo">ALGONIX</a>
-          <div className="nav-links">
-            <a href="/">Home</a>
-            <Link to="/sheet">Sheet</Link>
-            <Link to="/author">Author</Link>
-            {user ? (
-              <div className="profile-dropdown" onClick={toggleDropdown}>
-                <img
-                  src={
-                    user.profilePhoto &&
-                    user.profilePhoto !== '/assets/default-profile.png' &&
-                    user.profilePhoto !== ''
-                      ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/profile/photo/${user._id}`
-                      : '/assets/default-profile.png'
-                  }
-                  alt="Profile"
-                  className="profile-photo"
+    <div className="page">
+      <Navbar />
+      <main className="tutorials container">
+        <header className="tutorials__head">
+          <span className="eyebrow">Video tutorials</span>
+          <h1 className="gradient-text">Learn by watching the build.</h1>
+          <p>Bite-sized, expert-led videos covering DSA, languages, and real-world patterns.</p>
+        </header>
+
+        {error && <div className="tutorials__error">{error}</div>}
+
+        <div className="tutorials__grid">
+          {tutorials.map((t, i) => (
+            <Reveal key={t._id} delay={i * 70} className="tutorial">
+              <div className="tutorial__media">
+                <iframe
+                  src={t.iframeLink}
+                  title={t.topic}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 />
-                <div className="dropdown-content">
-                  <Link to="/profile" className="dropdown-item">My Profile</Link>
-                  <button onClick={logout}>Logout</button>
-                </div>
               </div>
-            ) : (
-              <Link to="/login">Login/Signup</Link>
-            )}
-          </div>
-        </div>
-      </nav>
-      <div className="tutorials-header">
-        <h2>Video Tutorials</h2>
-        <p>Explore our collection of video tutorials to enhance your learning.</p>
-      </div>
-      <div className="tutorials-content">
-        {tutorials.map(tutorial => (
-          <div key={tutorial._id} className="tutorials-card">
-            <iframe
-              src={tutorial.iframeLink}
-              title={tutorial.topic}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-            <div className="tutorials-info">
-              <h3>{tutorial.topic}</h3>
-              <a href={tutorial.directLink} className="learn-btn">Learn</a>
-            </div>
-            {isAdmin && (
-              <div className="admin-controls">
-                <button onClick={() => handleRemoveTutorial(tutorial._id)}>Remove Video</button>
-                <button onClick={() => handleChangeTutorial(tutorial._id)}>Change Video</button>
+              <div className="tutorial__body">
+                <h3>{t.topic}</h3>
+                <a href={t.directLink} target="_blank" rel="noreferrer" className="btn btn-ghost">Watch on YouTube</a>
+                {isAdmin && (
+                  <div className="tutorial__admin">
+                    <button className="sheet__chip" onClick={() => handleChangeTutorial(t._id)}>Edit</button>
+                    <button className="sheet__chip sheet__chip--danger" onClick={() => handleRemoveTutorial(t._id)}>Remove</button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
-      </div>
-      {isAdmin && (
-        <div className="admin-actions">
-          <form onSubmit={handleAddTutorial}>
-            <input
-              type="text"
-              placeholder="Iframe Link"
-              value={newTutorial.iframeLink}
-              onChange={(e) => setNewTutorial({ ...newTutorial, iframeLink: e.target.value })}
-              required
-            />
-            <input
-              type="text"
-              placeholder="Direct Link"
-              value={newTutorial.directLink}
-              onChange={(e) => setNewTutorial({ ...newTutorial, directLink: e.target.value })}
-              required
-            />
-            <input
-              type="text"
-              placeholder="Topic"
-              value={newTutorial.topic}
-              onChange={(e) => setNewTutorial({ ...newTutorial, topic: e.target.value })}
-              required
-            />
-            <button type="submit">Add Video</button>
-          </form>
-          {error && <p className="error">{error}</p>}
+            </Reveal>
+          ))}
+          {tutorials.length === 0 && !error && (
+            <div className="tutorials__empty">Loading tutorials...</div>
+          )}
         </div>
-      )}
+
+        {isAdmin && (
+          <div className="tutorials__form">
+            <h3>Add a tutorial</h3>
+            <form onSubmit={handleAddTutorial}>
+              <input type="text" placeholder="Iframe Link" required
+                value={newTutorial.iframeLink}
+                onChange={(e) => setNewTutorial({ ...newTutorial, iframeLink: e.target.value })} />
+              <input type="text" placeholder="Direct Link" required
+                value={newTutorial.directLink}
+                onChange={(e) => setNewTutorial({ ...newTutorial, directLink: e.target.value })} />
+              <input type="text" placeholder="Topic" required
+                value={newTutorial.topic}
+                onChange={(e) => setNewTutorial({ ...newTutorial, topic: e.target.value })} />
+              <button type="submit" className="btn btn-primary">Add Video</button>
+            </form>
+          </div>
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

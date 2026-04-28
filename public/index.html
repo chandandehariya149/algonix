@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
     <meta name="description" content="Algonix - Code, Compete, Win!" />
     <meta name="google-site-verification" content="p9wy1Lr79eaq66l88U2VwldrXPoRvWwp__2ErtDrrxY" />
     <link rel="canonical" href="https://algonix.online/" />
@@ -23,28 +22,17 @@
     <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-    <title>Algonix</title>
+    <meta name="theme-color" content="#0B0D12" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>Algonix · Code, Compete, Win</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const sections = document.querySelectorAll('.languages, .features, .contact-us, .footer');
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.1 }
-        );
-        sections.forEach(section => observer.observe(section));
-      });
-    </script>
   </body>
 </html>

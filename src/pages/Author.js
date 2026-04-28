@@ -1,68 +1,48 @@
-import { useContext } from 'react';
+﻿import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../styles/Author.css';
-import { Link } from 'react-router-dom';
 
 function Author() {
-  const { user, logout } = useContext(AuthContext);
-
+  useContext(AuthContext);
   return (
-    <div className="author-container">
-      <nav className="author-nav">
-        <div className="nav-content">
-          <a href="/" className="logo">ALGONIX</a>
-          <div className="nav-links">
-            <a href="/">Home</a>
-            <Link to="/sheet">Sheet</Link>
-            <Link to="/author">Author</Link>
-            {user ? (
-              <div className="profile-dropdown">
-                <img
-      src={
-        user.profilePhoto &&
-        user.profilePhoto !== '/assets/default-profile.png' &&
-        user.profilePhoto !== ''
-          ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/profile/photo/${user._id}`
-          : '/assets/default-profile.png'
-      }
-      alt="Profile"
-      className="profile-photo"
-    />
-                <div className="dropdown-content">
-                  <a href="/profile">My Profile</a>
-                  <button onClick={logout}>Logout</button>
-                </div>
-              </div>
-            ) : (
-              <a href="/login">Login</a>
-            )}
+    <div className="page">
+      <Navbar />
+      <main className="author container">
+        <div className="author__bg" aria-hidden="true"><div className="author__glow" /></div>
+        <header className="author__head">
+          <span className="eyebrow">Mentor</span>
+          <h1 className="gradient-text">Meet the maker behind Algonix.</h1>
+        </header>
+        <div className="author__card">
+          <div className="author__photo-wrap">
+            <img src="/assets/mentor.png" alt="Chandan Dehariya" className="author__photo" />
+            <div className="author__photo-ring" aria-hidden="true" />
+          </div>
+          <div className="author__body">
+            <h2>Chandan Dehariya</h2>
+            <span className="author__role">Founder · Engineer · ML Enthusiast</span>
+            <p>
+              Chandan is the founder of Algonix — a passionate coder and machine-learning
+              enthusiast. With a mission to empower Indian coders and entrepreneurs, he
+              built Algonix to make quality education accessible to everyone, with 100%
+              free content and round-the-clock support.
+            </p>
+            <p>
+              His expertise spans multiple programming languages, data structures,
+              algorithms, and ML. Through Algonix he ships tutorials, a curated DSA sheet,
+              and an in-browser compiler — all designed for builders.
+            </p>
+            <div className="author__links">
+              <a href="https://www.linkedin.com/in/chandandehariya" target="_blank" rel="noreferrer" className="btn btn-ghost">LinkedIn</a>
+              <a href="https://github.com/chandandehariya"        target="_blank" rel="noreferrer" className="btn btn-ghost">GitHub</a>
+              <a href="https://chandandehariya.vercel.app/"        target="_blank" rel="noreferrer" className="btn btn-primary">Portfolio</a>
+            </div>
           </div>
         </div>
-      </nav>
-      <div className="author-content">
-        <h2>Meet Your Mentor</h2>
-        <div className="author-details">
-          <img src="/assets/mentor.png" alt="Chandan Dehariya" className="author-photo" />
-          <h3>Chandan Dehariya</h3>
-          <p>
-            Chandan Dehariya is the founder of Algonix, a passionate coder, and a machine learning enthusiast.
-            With a mission to empower Indian coders and entrepreneurs, he started Algonix to build a vibrant
-            community where anyone can learn to code, compete, and grow. Chandan believes in making quality
-            education accessible to all, offering 100% free content and 24/7 support to learners.
-          </p>
-          <p>
-            His expertise spans multiple programming languages, data structures, algorithms, and ML. Through
-            Algonix, he provides comprehensive resources, including tutorials, coding sheets, and a compiler,
-            to help beginners and advanced coders alike. Follow him on social media to stay updated on his
-            latest initiatives!
-          </p>
-          <div className="author-links">
-            <a href="https://www.linkedin.com/in/chandandehariya">LinkedIn</a>
-            <a href="https://github.com/chandandehariya">GitHub</a>
-            <a href="https://chandandehariya.vercel.app/">Portfolio</a>
-          </div>
-        </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
