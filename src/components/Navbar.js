@@ -106,9 +106,14 @@ export default function Navbar() {
                 aria-expanded={menuOpen}
               >
                 <img
-                  src={user.profilePhoto || '/assets/default-profile.png'}
+                  src={
+                    user.profilePhoto && user.profilePhoto !== '/assets/default-profile.png' && user._id
+                      ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/profile/photo/${user._id}`
+                      : '/assets/default-profile.png'
+                  }
                   alt={user.name || 'Profile'}
                   className="nav__avatar"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/default-profile.png'; }}
                 />
               </button>
               {menuOpen && (
