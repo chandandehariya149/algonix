@@ -62,22 +62,21 @@ function CodeMock() {
     <div className="codecard">
       <div className="codecard__chrome">
         <span /><span /><span />
-        <em>algonix.java</em>
+        <em>algonix.cpp</em>
       </div>
       <pre className="codecard__body"><code>{`// Algonix · two-sum, optimized
-import java.util.*;
-class Solution {
-    public int[] twoSum(int[] nums, int target) {
-        HashMap<Integer, Integer> seen = new HashMap<>();
-        for(int i=0; i<nums.length; i++){
-            int need = target - nums[i];
-            if(seen.containsKey(need)){
-                return new int[]{ seen.get(need), i };
-            }
-            seen.put(nums[i], i);
-        }
-        return new int[]{};
-    }
+#include <vector>
+#include <unordered_map>
+using namespace std;
+
+vector<int> twoSum(vector<int>& nums, int target) {
+  unordered_map<int,int> seen;
+  for (int i = 0; i < nums.size(); ++i) {
+    int need = target - nums[i];
+    if (seen.count(need)) return { seen[need], i };
+    seen[nums[i]] = i;
+  }
+  return {};
 }`}</code></pre>
       <div className="codecard__footer">
         <span className="codecard__dot" /> Compiled in 38 ms · 0 errors
